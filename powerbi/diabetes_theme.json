@@ -1,0 +1,42 @@
+{
+  "name": "Diabetes Risk Theme",
+  "dataColors": [
+    "#C0392B",
+    "#E74C3C",
+    "#E67E22",
+    "#F39C12",
+    "#27AE60",
+    "#2980B9",
+    "#8E44AD",
+    "#16A085"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#252423",
+  "tableAccent": "#C0392B",
+  "visualStyles": {
+    "*": {
+      "*": {
+        "fontFamily": [{ "value": "Segoe UI" }],
+        "fontSize": [{ "value": 11 }]
+      }
+    },
+    "card": {
+      "*": {
+        "calloutValue": [{ "fontSize": { "value": 28 }, "fontBold": [{ "value": true }] }],
+        "label": [{ "color": { "solid": { "color": "#252423" } } }]
+      }
+    },
+    "gauge": {
+      "*": {
+        "target": [{ "color": { "solid": { "color": "#E67E22" } } }]
+      }
+    }
+  },
+  "good": "#27AE60",
+  "neutral": "#F39C12",
+  "bad": "#C0392B",
+  "maximum": "#C0392B",
+  "center": "#F39C12",
+  "minimum": "#27AE60",
+  "null": "#D3D3D3"
+}
