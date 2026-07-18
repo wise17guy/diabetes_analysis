@@ -24,7 +24,7 @@
 |-------|------|---------|
 | Age Group | Tile slicer | All |
 | Risk Tier | Tile slicer | All |
-| BMI Category | Dropdown slicer | All |
+| BMI Category | Tile slicer | All |
 
 ### KPI Cards (row of 4, below slicers)
 | Card | Measure | Icon |
@@ -143,11 +143,13 @@
   "background": "#FFFFFF",
   "foreground": "#252423",
   "tableAccent": "#C0392B",
-  "sentiment": {
-    "bad": "#C0392B",
-    "neutral": "#F39C12",
-    "good": "#27AE60"
-  }
+  "good": "#27AE60",
+  "neutral": "#F39C12",
+  "bad": "#C0392B",
+  "maximum": "#C0392B",
+  "center": "#F39C12",
+  "minimum": "#27AE60",
+  "null": "#D3D3D3"
 }
 ```
 

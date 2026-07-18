@@ -25,7 +25,7 @@ diabetes_analysis/
 | Age | Patient age (21–81) |
 | Pregnancies | Number of pregnancies (0–17) |
 | Glucose | Plasma glucose concentration (mg/dL) |
-| BloodPressure (mg/dL) | Diastolic blood pressure |
+| BloodPressure (mmHg) | Diastolic blood pressure (column named 'mg/dL' in source but values are mmHg) |
 | SkinThickness | Triceps skin fold thickness (mm) |
 | Insulin | 2-Hour serum insulin (µIU/mL) |
 | BMI | Body mass index |

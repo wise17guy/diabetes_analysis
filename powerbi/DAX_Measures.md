@@ -57,6 +57,9 @@ AVERAGE('Diabetes Data'[BMI])
 
 Avg Blood Pressure =
 AVERAGE('Diabetes Data'[BloodPressure (mg/dL)])
+-- Note: the source column is named 'BloodPressure (mg/dL)' in the dataset,
+-- but blood pressure is measured in mmHg. The column name reflects the original
+-- data as-is; clinically interpret values as mmHg.
 
 Avg Insulin =
 AVERAGE('Diabetes Data'[Insulin])
@@ -126,7 +129,7 @@ DIVIDE(
 % Pre-diabetic Glucose =
 DIVIDE(
     CALCULATE(COUNTROWS('Diabetes Data'), 'Diabetes Data'[Glucose Category] = "Pre-diabetic"),
-    [Total Percent],
+    [Total Patients],
     0
 )
 
