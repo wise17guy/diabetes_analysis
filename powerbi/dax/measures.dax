@@ -1,0 +1,719 @@
+// ================================================================
+// FILE       : measures.dax
+// PURPOSE    : All DAX measures for the Diabetes Analysis .pbix
+//              Organised by report page.  Copy each measure into
+//              Power BI Desktop via Modeling > New Measure.
+//
+// TABLE      : DiabetesData  (main fact table)
+// CONVENTION : Measure names use Title Case with spaces.
+//              Implicit CALCULATE filters reference DiabetesData.
+// ================================================================
+
+
+// ================================================================
+// SECTION 0 – BASE / SHARED MEASURES
+//   These measures are referenced by page-level measures below.
+//   Create them first.
+// ================================================================
+
+// ---------------------------------------------------------------
+// Total Patients
+// Returns the total number of patient rows in context.
+// ---------------------------------------------------------------
+[Total Patients] =
+COUNTROWS( DiabetesData )
+
+
+// ---------------------------------------------------------------
+// Total Patients (All)
+// Ignores all slicers; used for % calculations that need a
+// stable denominator regardless of current filter context.
+// ---------------------------------------------------------------
+[Total Patients (All)] =
+CALCULATE(
+    COUNTROWS( DiabetesData ),
+    ALL( DiabetesData )
+)
+
+
+// ---------------------------------------------------------------
+// % of Total Patients
+// What share of ALL patients does the current context represent.
+// ---------------------------------------------------------------
+[% of Total Patients] =
+DIVIDE(
+    [Total Patients],
+    [Total Patients (All)],
+    0
+)
+
+
+// ---------------------------------------------------------------
+// Avg Age
+// ---------------------------------------------------------------
+[Avg Age] =
+AVERAGE( DiabetesData[Age] )
+
+
+// ---------------------------------------------------------------
+// Avg Glucose
+// ---------------------------------------------------------------
+[Avg Glucose] =
+AVERAGE( DiabetesData[Glucose] )
+
+
+// ---------------------------------------------------------------
+// Avg BMI
+// ---------------------------------------------------------------
+[Avg BMI] =
+AVERAGE( DiabetesData[BMI] )
+
+
+// ---------------------------------------------------------------
+// Avg Blood Pressure
+// ---------------------------------------------------------------
+[Avg Blood Pressure] =
+AVERAGE( DiabetesData[BloodPressure] )
+
+
+// ---------------------------------------------------------------
+// Avg Insulin
+// ---------------------------------------------------------------
+[Avg Insulin] =
+AVERAGE( DiabetesData[Insulin] )
+
+
+// ---------------------------------------------------------------
+// Avg DPF
+// Average Diabetes Pedigree Function (genetic risk proxy).
+// ---------------------------------------------------------------
+[Avg DPF] =
+AVERAGE( DiabetesData[DiabetesPedigreeFunction] )
+
+
+// ---------------------------------------------------------------
+// Avg Pregnancies
+// ---------------------------------------------------------------
+[Avg Pregnancies] =
+AVERAGE( DiabetesData[Pregnancies] )
+
+
+// ---------------------------------------------------------------
+// Avg Skin Thickness
+// ---------------------------------------------------------------
+[Avg Skin Thickness] =
+AVERAGE( DiabetesData[SkinThickness] )
+
+
+// ---------------------------------------------------------------
+// Avg Risk Score
+// ---------------------------------------------------------------
+[Avg Risk Score] =
+AVERAGE( DiabetesData[RiskScore] )
+
+
+// ---------------------------------------------------------------
+// Max Risk Score
+// ---------------------------------------------------------------
+[Max Risk Score] =
+MAX( DiabetesData[RiskScore] )
+
+
+// ---------------------------------------------------------------
+// Min Risk Score
+// ---------------------------------------------------------------
+[Min Risk Score] =
+MIN( DiabetesData[RiskScore] )
+
+
+// ================================================================
+// SECTION 1 – EXECUTIVE SUMMARY PAGE
+// ================================================================
+
+// ---------------------------------------------------------------
+// High Risk Patients
+// Count of patients classified as "High Risk".
+// ---------------------------------------------------------------
+[High Risk Patients] =
+CALCULATE(
+    COUNTROWS( DiabetesData ),
+    DiabetesData[RiskCategory] = "High Risk"
+)
+
+
+// ---------------------------------------------------------------
+// Medium Risk Patients
+// ---------------------------------------------------------------
+[Medium Risk Patients] =
+CALCULATE(
+    COUNTROWS( DiabetesData ),
+    DiabetesData[RiskCategory] = "Medium Risk"
+)
+
+
+// ---------------------------------------------------------------
+// Low Risk Patients
+// ---------------------------------------------------------------
+[Low Risk Patients] =
+CALCULATE(
+    COUNTROWS( DiabetesData ),
+    DiabetesData[RiskCategory] = "Low Risk"
+)
+
+
+// ---------------------------------------------------------------
+// High Risk %
+// Percentage of patients who are High Risk.
+// ---------------------------------------------------------------
+[High Risk %] =
+DIVIDE(
+    [High Risk Patients],
+    [Total Patients (All)],
+    0
+)
+
+
+// ---------------------------------------------------------------
+// Diabetic Range %
+// % of patients whose glucose is in the diabetic range (≥ 126).
+// ---------------------------------------------------------------
+[Diabetic Range %] =
+DIVIDE(
+    CALCULATE(
+        COUNTROWS( DiabetesData ),
+        DiabetesData[GlucoseCategory] = "Diabetic Range"
+    ),
+    [Total Patients (All)],
+    0
+)
+
+
+// ---------------------------------------------------------------
+// Pre-Diabetic %
+// % of patients with pre-diabetic glucose (100–125).
+// ---------------------------------------------------------------
+[Pre-Diabetic %] =
+DIVIDE(
+    CALCULATE(
+        COUNTROWS( DiabetesData ),
+        DiabetesData[GlucoseCategory] = "Pre-Diabetic"
+    ),
+    [Total Patients (All)],
+    0
+)
+
+
+// ---------------------------------------------------------------
+// Normal Glucose %
+// ---------------------------------------------------------------
+[Normal Glucose %] =
+DIVIDE(
+    CALCULATE(
+        COUNTROWS( DiabetesData ),
+        DiabetesData[GlucoseCategory] = "Normal"
+    ),
+    [Total Patients (All)],
+    0
+)
+
+
+// ---------------------------------------------------------------
+// Obese Patients %
+// % of patients with BMI ≥ 30 (any Obese category).
+// ---------------------------------------------------------------
+[Obese Patients %] =
+DIVIDE(
+    CALCULATE(
+        COUNTROWS( DiabetesData ),
+        DiabetesData[BMI] >= 30
+    ),
+    [Total Patients (All)],
+    0
+)
+
+
+// ---------------------------------------------------------------
+// KPI: Risk Score Gauge (for card / gauge visual on summary page)
+// Returns the average risk score as a 0–100 value.
+// ---------------------------------------------------------------
+[Risk Score Gauge] =
+ROUND( [Avg Risk Score], 0 )
+
+
+// ---------------------------------------------------------------
+// Executive Summary Headline Text
+// Dynamic text string for a card visual (requires Power BI
+// string concatenation pattern).
+// ---------------------------------------------------------------
+[Headline Summary] =
+"Cohort: " & FORMAT( [Total Patients], "#,0" )
+    & " patients | High Risk: " & FORMAT( [High Risk %], "0.0%" )
+    & " | Avg Glucose: " & FORMAT( [Avg Glucose], "0.0" )
+    & " mg/dL | Avg BMI: " & FORMAT( [Avg BMI], "0.00" )
+
+
+// ================================================================
+// SECTION 2 – RISK FACTORS PAGE
+// ================================================================
+
+// ---------------------------------------------------------------
+// Risk Score (High Risk Only)
+// Average risk score for patients classified as High Risk.
+// ---------------------------------------------------------------
+[Avg Risk Score (High)] =
+CALCULATE(
+    AVERAGE( DiabetesData[RiskScore] ),
+    DiabetesData[RiskCategory] = "High Risk"
+)
+
+
+// ---------------------------------------------------------------
+// Glucose Variance
+// Standard deviation of glucose across current filter context.
+// ---------------------------------------------------------------
+[Glucose Std Dev] =
+STDEV.P( DiabetesData[Glucose] )
+
+
+// ---------------------------------------------------------------
+// BMI Std Dev
+// ---------------------------------------------------------------
+[BMI Std Dev] =
+STDEV.P( DiabetesData[BMI] )
+
+
+// ---------------------------------------------------------------
+// High BP %
+// % of patients with BloodPressure ≥ 90 (Hypertension).
+// ---------------------------------------------------------------
+[High BP %] =
+DIVIDE(
+    CALCULATE(
+        COUNTROWS( DiabetesData ),
+        DiabetesData[BloodPressure] >= 90
+    ),
+    [Total Patients],
+    0
+)
+
+
+// ---------------------------------------------------------------
+// Elevated Insulin %
+// % of patients with Insulin > 166 µIU/mL.
+// ---------------------------------------------------------------
+[Elevated Insulin %] =
+DIVIDE(
+    CALCULATE(
+        COUNTROWS( DiabetesData ),
+        DiabetesData[Insulin] > 166
+    ),
+    [Total Patients],
+    0
+)
+
+
+// ---------------------------------------------------------------
+// High DPF %
+// % of patients with DPF ≥ 0.5 (elevated genetic risk).
+// ---------------------------------------------------------------
+[High DPF %] =
+DIVIDE(
+    CALCULATE(
+        COUNTROWS( DiabetesData ),
+        DiabetesData[DiabetesPedigreeFunction] >= 0.5
+    ),
+    [Total Patients],
+    0
+)
+
+
+// ---------------------------------------------------------------
+// Multi-Factor Risk Count
+// Number of individual risk factors present per patient
+// (used in scatter / bubble chart as bubble size).
+// Returns average number of concurrent risk factors in context.
+// ---------------------------------------------------------------
+[Avg Concurrent Risk Factors] =
+AVERAGEX(
+    DiabetesData,
+    ( IF( DiabetesData[GlucoseCategory] <> "Normal", 1, 0 ) )
+    + ( IF( DiabetesData[BMI] >= 30, 1, 0 ) )
+    + ( IF( DiabetesData[BloodPressure] >= 90, 1, 0 ) )
+    + ( IF( DiabetesData[DiabetesPedigreeFunction] >= 0.5, 1, 0 ) )
+    + ( IF( DiabetesData[Insulin] > 166, 1, 0 ) )
+    + ( IF( DiabetesData[Age] >= 45, 1, 0 ) )
+)
+
+
+// ---------------------------------------------------------------
+// Correlation Proxy: Glucose × BMI Index
+// Simple product used to illustrate the compound risk in a
+// scatter plot (higher = combined high glucose AND high BMI).
+// ---------------------------------------------------------------
+[Glucose BMI Index] =
+AVERAGEX(
+    DiabetesData,
+    DiabetesData[Glucose] * DiabetesData[BMI]
+)
+
+
+// ---------------------------------------------------------------
+// Risk Contribution: Glucose
+// How much of the average composite risk score comes from the
+// glucose component alone.
+// ---------------------------------------------------------------
+[Risk From Glucose] =
+AVERAGEX(
+    DiabetesData,
+    IF( DiabetesData[Glucose] >= 126, 30,
+        IF( DiabetesData[Glucose] >= 100, 15, 0 )
+    )
+)
+
+
+// ---------------------------------------------------------------
+// Risk Contribution: BMI
+// ---------------------------------------------------------------
+[Risk From BMI] =
+AVERAGEX(
+    DiabetesData,
+    IF( DiabetesData[BMI] >= 35, 20,
+        IF( DiabetesData[BMI] >= 30, 10, 0 )
+    )
+)
+
+
+// ---------------------------------------------------------------
+// Risk Contribution: Age
+// ---------------------------------------------------------------
+[Risk From Age] =
+AVERAGEX(
+    DiabetesData,
+    IF( DiabetesData[Age] >= 50, 15,
+        IF( DiabetesData[Age] >= 40, 8, 0 )
+    )
+)
+
+
+// ---------------------------------------------------------------
+// Risk Contribution: Blood Pressure
+// ---------------------------------------------------------------
+[Risk From BP] =
+AVERAGEX(
+    DiabetesData,
+    IF( DiabetesData[BloodPressure] >= 90, 10, 0 )
+)
+
+
+// ---------------------------------------------------------------
+// Risk Contribution: Genetics (DPF)
+// ---------------------------------------------------------------
+[Risk From Genetics] =
+AVERAGEX(
+    DiabetesData,
+    IF( DiabetesData[DiabetesPedigreeFunction] >= 0.5, 10, 0 )
+)
+
+
+// ---------------------------------------------------------------
+// Risk Contribution: Pregnancies
+// ---------------------------------------------------------------
+[Risk From Pregnancies] =
+AVERAGEX(
+    DiabetesData,
+    IF( DiabetesData[Pregnancies] >= 6, 10, 0 )
+)
+
+
+// ================================================================
+// SECTION 3 – PATIENT ANALYSIS PAGE
+// ================================================================
+
+// ---------------------------------------------------------------
+// Patient Count by Age Group (used in bar chart)
+// Returns count restricted to the current AgeGroup context.
+// ---------------------------------------------------------------
+[Patients in Age Group] =
+CALCULATE(
+    COUNTROWS( DiabetesData ),
+    ALLEXCEPT( DiabetesData, DiabetesData[AgeGroup] )
+)
+
+
+// ---------------------------------------------------------------
+// Avg BMI by Age Group
+// ---------------------------------------------------------------
+[Avg BMI by Age Group] =
+AVERAGEX(
+    ALLEXCEPT( DiabetesData, DiabetesData[AgeGroup] ),
+    DiabetesData[BMI]
+)
+
+
+// ---------------------------------------------------------------
+// BMI Percentile 25
+// Returns 25th percentile of BMI in current context.
+// ---------------------------------------------------------------
+[BMI P25] =
+PERCENTILE.INC( DiabetesData[BMI], 0.25 )
+
+
+// ---------------------------------------------------------------
+// BMI Percentile 75
+// ---------------------------------------------------------------
+[BMI P75] =
+PERCENTILE.INC( DiabetesData[BMI], 0.75 )
+
+
+// ---------------------------------------------------------------
+// Glucose Percentile 25
+// ---------------------------------------------------------------
+[Glucose P25] =
+PERCENTILE.INC( DiabetesData[Glucose], 0.25 )
+
+
+// ---------------------------------------------------------------
+// Glucose Percentile 75
+// ---------------------------------------------------------------
+[Glucose P75] =
+PERCENTILE.INC( DiabetesData[Glucose], 0.75 )
+
+
+// ---------------------------------------------------------------
+// Max Pregnancies
+// ---------------------------------------------------------------
+[Max Pregnancies] =
+MAX( DiabetesData[Pregnancies] )
+
+
+// ---------------------------------------------------------------
+// % Patients with High Pregnancy Count (≥ 6)
+// ---------------------------------------------------------------
+[High Pregnancy %] =
+DIVIDE(
+    CALCULATE(
+        COUNTROWS( DiabetesData ),
+        DiabetesData[Pregnancies] >= 6
+    ),
+    [Total Patients],
+    0
+)
+
+
+// ---------------------------------------------------------------
+// Age Range (Max − Min)
+// ---------------------------------------------------------------
+[Age Range] =
+MAX( DiabetesData[Age] ) - MIN( DiabetesData[Age] )
+
+
+// ---------------------------------------------------------------
+// Median Glucose
+// ---------------------------------------------------------------
+[Median Glucose] =
+MEDIAN( DiabetesData[Glucose] )
+
+
+// ---------------------------------------------------------------
+// Median BMI
+// ---------------------------------------------------------------
+[Median BMI] =
+MEDIAN( DiabetesData[BMI] )
+
+
+// ---------------------------------------------------------------
+// Median Age
+// ---------------------------------------------------------------
+[Median Age] =
+MEDIAN( DiabetesData[Age] )
+
+
+// ---------------------------------------------------------------
+// Patient Profile Card Text
+// Dynamic summary card for drill-through patient detail page.
+// Bind to a multi-row card or text visual.
+// ---------------------------------------------------------------
+[Patient Profile Card] =
+"Age: " & FORMAT( [Avg Age], "0" )
+    & " | BMI: " & FORMAT( [Avg BMI], "0.0" )
+    & " | Glucose: " & FORMAT( [Avg Glucose], "0.0" )
+    & " | Risk Score: " & FORMAT( [Avg Risk Score], "0.0" )
+
+
+// ================================================================
+// SECTION 4 – PREDICTIVE INSIGHTS PAGE
+// ================================================================
+
+// ---------------------------------------------------------------
+// Predicted High Risk %
+// Logistic-regression–inspired scoring proxy.
+// Uses three strongest predictors (Glucose, BMI, Age) with
+// weights derived from the Pima dataset literature.
+// Output is mapped to a 0–1 probability scale.
+//
+//   log-odds ≈ -8.4 + 0.035·Glucose + 0.089·BMI + 0.032·Age
+//   P = 1 / (1 + e^(-log-odds))
+//
+// This is an approximation suitable for a BI dashboard;
+// it is NOT a replacement for a trained ML model.
+// ---------------------------------------------------------------
+[Predicted Diabetic Prob] =
+VAR AvgGluc = [Avg Glucose]
+VAR AvgBMI  = [Avg BMI]
+VAR AvgAge  = [Avg Age]
+VAR LogOdds = -8.4 + ( 0.035 * AvgGluc ) + ( 0.089 * AvgBMI ) + ( 0.032 * AvgAge )
+VAR Prob    = 1 / ( 1 + EXP( -LogOdds ) )
+RETURN
+    ROUND( Prob, 4 )
+
+
+// ---------------------------------------------------------------
+// Predicted Diabetic % (formatted as %)
+// ---------------------------------------------------------------
+[Predicted Diabetic % Label] =
+FORMAT( [Predicted Diabetic Prob], "0.0%" )
+
+
+// ---------------------------------------------------------------
+// Risk Score Band Count (for histogram / waterfall)
+// Returns the count of patients in each 10-point risk score band.
+// Use as a measure on a table visual with RiskScore bands as rows.
+// ---------------------------------------------------------------
+[Patients in Risk Band] =
+COUNTROWS( DiabetesData )
+
+
+// ---------------------------------------------------------------
+// Rolling Avg Risk Score (simulated — no date column)
+// Calculated across AgeGroup using a WINDOW-style approach.
+// Returns the running average risk score from youngest to oldest
+// cohort as age increases (illustrates upward trend).
+// ---------------------------------------------------------------
+[Cumulative Avg Risk Score by Age] =
+CALCULATE(
+    AVERAGE( DiabetesData[RiskScore] ),
+    FILTER(
+        ALL( DiabetesData[AgeGroupSort] ),
+        DiabetesData[AgeGroupSort] <= MAX( DiabetesData[AgeGroupSort] )
+    )
+)
+
+
+// ---------------------------------------------------------------
+// Risk Tier Distribution (High)
+// % of patients in High Risk tier within current context.
+// Used in a donut / pie visual on the Predictive page.
+// ---------------------------------------------------------------
+[Risk Tier High %] =
+DIVIDE(
+    CALCULATE(
+        COUNTROWS( DiabetesData ),
+        DiabetesData[RiskCategorySort] = 3
+    ),
+    [Total Patients],
+    0
+)
+
+
+// ---------------------------------------------------------------
+// Risk Tier Distribution (Medium)
+// ---------------------------------------------------------------
+[Risk Tier Medium %] =
+DIVIDE(
+    CALCULATE(
+        COUNTROWS( DiabetesData ),
+        DiabetesData[RiskCategorySort] = 2
+    ),
+    [Total Patients],
+    0
+)
+
+
+// ---------------------------------------------------------------
+// Risk Tier Distribution (Low)
+// ---------------------------------------------------------------
+[Risk Tier Low %] =
+DIVIDE(
+    CALCULATE(
+        COUNTROWS( DiabetesData ),
+        DiabetesData[RiskCategorySort] = 1
+    ),
+    [Total Patients],
+    0
+)
+
+
+// ---------------------------------------------------------------
+// Top Risk Driver
+// Returns the name of the single factor contributing the most
+// risk points on average in the current filter context.
+// Used in a card visual headline on the Predictive page.
+// ---------------------------------------------------------------
+[Top Risk Driver] =
+VAR Glucose = [Risk From Glucose]
+VAR BMI     = [Risk From BMI]
+VAR Age     = [Risk From Age]
+VAR BP      = [Risk From BP]
+VAR Genetics = [Risk From Genetics]
+VAR Pregnancies = [Risk From Pregnancies]
+VAR MaxVal  = MAXX(
+    {
+        ROW( "Factor", "Glucose",     "Val", Glucose ),
+        ROW( "Factor", "BMI",         "Val", BMI ),
+        ROW( "Factor", "Age",         "Val", Age ),
+        ROW( "Factor", "Blood Press.", "Val", BP ),
+        ROW( "Factor", "Genetics",    "Val", Genetics ),
+        ROW( "Factor", "Pregnancies", "Val", Pregnancies )
+    },
+    [Val]
+)
+RETURN
+    MAXX(
+        FILTER(
+            {
+                ROW( "Factor", "Glucose",     "Val", Glucose ),
+                ROW( "Factor", "BMI",         "Val", BMI ),
+                ROW( "Factor", "Age",         "Val", Age ),
+                ROW( "Factor", "Blood Press.", "Val", BP ),
+                ROW( "Factor", "Genetics",    "Val", Genetics ),
+                ROW( "Factor", "Pregnancies", "Val", Pregnancies )
+            },
+            [Val] = MaxVal
+        ),
+        [Factor]
+    )
+
+
+// ---------------------------------------------------------------
+// Risk Score Trend by Age Group
+// Returns the average risk score for each AgeGroup.
+// Used as values in a line chart on the Predictive Insights page.
+// ---------------------------------------------------------------
+[Risk Score Trend] =
+AVERAGEX(
+    ALLEXCEPT( DiabetesData, DiabetesData[AgeGroup], DiabetesData[AgeGroupSort] ),
+    DiabetesData[RiskScore]
+)
+
+
+// ---------------------------------------------------------------
+// Intervention Impact Simulation
+// Hypothetical: if all obese patients reduced BMI by 5 points,
+// how many would move from High Risk to Medium/Low?
+// Returns the count of patients who would be reclassified.
+// ---------------------------------------------------------------
+[Potential Risk Reduction] =
+CALCULATE(
+    COUNTROWS( DiabetesData ),
+    FILTER(
+        DiabetesData,
+        DiabetesData[RiskCategory] = "High Risk"
+            && ( DiabetesData[RiskScore] - 20 ) < 60
+            && DiabetesData[BMI] >= 30
+    )
+)
+
+
+// ================================================================
+// END OF MEASURES FILE
+// ================================================================
