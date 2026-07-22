@@ -296,7 +296,7 @@ let
     AddRiskScore = Table.AddColumn(
         AddRawScore,
         "RiskScore",
-        each Number.Round(Number.Min({[_RawScore] / 110 * 100, 100}), 1),
+        each Number.Round(List.Min({[_RawScore] / 110 * 100, 100}), 1),
         type number
     ),
 
