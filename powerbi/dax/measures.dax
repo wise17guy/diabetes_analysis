@@ -656,30 +656,23 @@ VAR Age     = [Risk From Age]
 VAR BP      = [Risk From BP]
 VAR Genetics = [Risk From Genetics]
 VAR Pregnancies = [Risk From Pregnancies]
-VAR MaxVal  = MAXX(
-    {
-        ROW( "Factor", "Glucose",     "Val", Glucose ),
-        ROW( "Factor", "BMI",         "Val", BMI ),
-        ROW( "Factor", "Age",         "Val", Age ),
-        ROW( "Factor", "Blood Press.", "Val", BP ),
-        ROW( "Factor", "Genetics",    "Val", Genetics ),
-        ROW( "Factor", "Pregnancies", "Val", Pregnancies )
-    },
-    [Val]
-)
+VAR FactorTable =
+    SELECTCOLUMNS(
+        {
+            ROW( "Factor", "Glucose",     "Val", Glucose ),
+            ROW( "Factor", "BMI",         "Val", BMI ),
+            ROW( "Factor", "Age",         "Val", Age ),
+            ROW( "Factor", "Blood Press.", "Val", BP ),
+            ROW( "Factor", "Genetics",    "Val", Genetics ),
+            ROW( "Factor", "Pregnancies", "Val", Pregnancies )
+        },
+        "Factor", [Factor],
+        "Val",    [Val]
+    )
+VAR MaxVal  = MAXX( FactorTable, [Val] )
 RETURN
     MAXX(
-        FILTER(
-            {
-                ROW( "Factor", "Glucose",     "Val", Glucose ),
-                ROW( "Factor", "BMI",         "Val", BMI ),
-                ROW( "Factor", "Age",         "Val", Age ),
-                ROW( "Factor", "Blood Press.", "Val", BP ),
-                ROW( "Factor", "Genetics",    "Val", Genetics ),
-                ROW( "Factor", "Pregnancies", "Val", Pregnancies )
-            },
-            [Val] = MaxVal
-        ),
+        FILTER( FactorTable, [Val] = MaxVal ),
         [Factor]
     )
 
